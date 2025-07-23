@@ -91,10 +91,8 @@ list_services() {
         
         printf "%-3s | %-30s | %s%-5s%s | %s%-5s%s\n" \
             "$counter" "$service" \
-            #"$status_color" 
-            "$status_text" "$NC" \
-            #"$enabled_color" 
-            "$enabled_text" "$NC"
+            "$status_color" "$status_text" "$NC" \
+            "$enabled_color" "$enabled_text" "$NC"
         
         ((counter++))
     done
