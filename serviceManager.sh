@@ -184,7 +184,6 @@ show_logs() {
     echo "============================================================"
     journalctl -u "$service_name" -f
 }
-return 1
 
 # Fungsi untuk membuat service baru
 create_service() {
