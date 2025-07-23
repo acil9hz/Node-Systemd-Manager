@@ -74,25 +74,27 @@ list_services() {
         local enabled=$(systemctl is-enabled "$service" 2>/dev/null)
         
         if [[ $status == "active" ]]; then
-            status_color=$GREEN
+            #status_color=$GREEN
             status_text="RUNNING"
         else
-            status_color=$RED
+            #status_color=$RED
             status_text="STOPPED"
         fi
         
         if [[ $enabled == "enabled" ]]; then
-            enabled_color=$GREEN
+            #enabled_color=$GREEN
             enabled_text="AUTO"
         else
-            enabled_color=$YELLOW
+            #enabled_color=$YELLOW
             enabled_text="MANUAL"
         fi
         
         printf "%-3s | %-30s | %s%-5s%s | %s%-5s%s\n" \
             "$counter" "$service" \
-            "$status_color" "$status_text" "$NC" \
-            "$enabled_color" "$enabled_text" "$NC"
+            #"$status_color" 
+            "$status_text" "$NC" \
+            #"$enabled_color" 
+            "$enabled_text" "$NC"
         
         ((counter++))
     done
