@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # warna
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
+RED=''
+GREEN=''
+YELLOW=''
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='' # No Color
 
 # header
 show_header() {
@@ -17,7 +17,7 @@ show_header() {
 
 # get list service
 get_node_services() {
-    systemctl list-unit-files --type=service --no-pager --plain --no-legend | grep -E "node|parsing" | grep -v "@" | awk '{print $1}' | sort
+    systemctl list-unit-files --type=service --no-pager --plain --no-legend | grep -E "parsing" | grep -v "@" | awk '{print $1}' | sort
 }
 
 # clean string ansi
