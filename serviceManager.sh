@@ -56,9 +56,9 @@ show_service_status() {
 # list services
 list_services() {
     echo -e "${BLUE}Daftar Service Node.js:${NC}"
-    echo "=================================================================="
+    echo "==================================================================================================="
     printf "%-3s | %-30s | %-20s | %-20s\n" "NO" "SERVICE NAME" "STATUS" "AUTOSTART"
-    echo "------------------------------------------------------------------"
+    echo "---------------------------------------------------------------------------------------------------"
     
     local services=$(get_node_services)
     if [[ -z "$services" ]]; then
@@ -89,7 +89,7 @@ list_services() {
             enabled_text="MANUAL"
         fi
         
-        printf "%-3s | %-30s | %s%-20s%s | %s%-20s%s\n" \
+        printf "%-3s | %-30s | %s%-5s%s | %s%-5s%s\n" \
             "$counter" "$service" \
             "$status_color" "$status_text" "$NC" \
             "$enabled_color" "$enabled_text" "$NC"
