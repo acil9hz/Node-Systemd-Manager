@@ -1,34 +1,31 @@
 #!/bin/bash
 
-# Node.js Service Manager
-# Script untuk mengelola aplikasi Node.js dengan systemd
-
-# Warna untuk output
+# warna
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Fungsi untuk menampilkan header
+# header
 show_header() {
-    echo -e "${BLUE}========================================${NC}"
-    echo -e "${BLUE}      Node.js Service Manager${NC}"
-    echo -e "${BLUE}========================================${NC}"
+    echo -e "${BLUE}=====================================================${NC}"
+    echo -e "${BLUE}      Node.js Service Manager By Datalogger@2025     ${NC}"
+    echo -e "${BLUE}=====================================================${NC}"
     echo
 }
 
-# Fungsi untuk mendapatkan daftar service Node.js (tanpa warna)
+# get list service
 get_node_services() {
     systemctl list-unit-files --type=service --no-pager --plain --no-legend | grep -E "node|parsing" | grep -v "@" | awk '{print $1}' | sort
 }
 
-# Fungsi untuk membersihkan string dari ANSI escape sequences
+# clean string ansi
 clean_string() {
     echo "$1" | sed 's/\x1b\[[0-9;]*m//g' | tr -d '\n\r'
 }
 
-# Fungsi untuk menampilkan status service
+# show status services
 show_service_status() {
     local service_name=$1
     local status=$(systemctl is-active "$service_name" 2>/dev/null)
@@ -56,7 +53,7 @@ show_service_status() {
         "$enabled_color" "$enabled_text" "$NC"
 }
 
-# Fungsi untuk menampilkan daftar service
+# list services
 list_services() {
     echo -e "${BLUE}Daftar Service Node.js:${NC}"
     echo "=================================================================="
@@ -102,7 +99,7 @@ list_services() {
     echo
 }
 
-# Fungsi untuk menampilkan detail service
+# show detail service
 show_service_detail() {
     local service_name=$(clean_string "$1")
     
@@ -125,12 +122,12 @@ show_service_detail() {
     echo
 }
 
-# Fungsi untuk mengelola service
+# manage service
 manage_service() {
     local action=$1
     local service_name=$(clean_string "$2")
     
-    # Validasi input
+    # validasi input
     if [[ -z "$service_name" ]]; then
         echo -e "${RED}Error: Nama service tidak valid${NC}"
         return 1
@@ -255,18 +252,18 @@ remove_service() {
 # Menu utama
 show_menu() {
     echo -e "${BLUE}Pilih aksi:${NC}"
-    echo "1. Tampilkan daftar service"
-    echo "2. Kelola service (start/stop/restart/enable/disable)"
-    echo "3. Lihat detail service"
-    echo "4. Lihat log realtime"
-    echo "5. Buat service baru"
-    echo "6. Hapus service"
-    echo "7. Reload semua service"
-    echo "8. Keluar"
+    echo "1. Show service"
+    echo "2. Manage service (start/stop/restart/enable/disable)"
+    echo "3. Show detail service"
+    echo "4. Show log realtime"
+    echo "5. Create new service"
+    echo "6. Delete service"
+    echo "7. Reload all service"
+    echo "8. Exit"
     echo
 }
 
-# Fungsi untuk memilih service (COMPLETELY FIXED VERSION)
+# select service
 select_service() {
     # Dapatkan daftar service yang bersih
     local services_raw
@@ -323,7 +320,7 @@ main() {
     
     while true; do
         show_menu
-        read -p "Pilihan Anda: " choice
+        read -p "Pilihan : " choice
         echo
         
         case $choice in
