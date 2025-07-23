@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # warna
-RED=''
-GREEN=''
-YELLOW=''
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 NC='' # No Color
 
@@ -91,8 +91,8 @@ list_services() {
         
         printf "%-3s | %-30s | %s%-10s%s | %s%-10s%s\n" \
             "$counter" "$service" \
-            "$status_color" "$status_text" "$NC" \
-            "$enabled_color" "$enabled_text" "$NC"
+            "$status_color" "$status_text" \
+            "$enabled_color" "$enabled_text"
         
         ((counter++))
     done
