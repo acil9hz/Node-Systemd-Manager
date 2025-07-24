@@ -5,13 +5,13 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
-NC='' # No Color
+NC='\033[0;0m' # No Color
 
 # header
 show_header() {
-    echo -e "${BLUE}=====================================================${NC}"
-    echo -e "${BLUE}      Node.js Service Manager By Datalogger@2025     ${NC}"
-    echo -e "${BLUE}=====================================================${NC}"
+    echo -e "${GREEN}=====================================================${NC}"
+    echo -e "${NC}      Node.js Service Manager By Datalogger@2025     ${NC}"
+    echo -e "${GREEN}=====================================================${NC}"
     echo
 }
 
@@ -47,7 +47,7 @@ show_service_status() {
         enabled_text="MANUAL"
     fi
     
-    printf "%-30s | %s%-10s%s | %s%-10s%s\n" \
+    printf "%-30s | %-10s%s | %-10s\n" \
         "$service_name" \
         "$status_color" "$status_text" "$NC" \
         "$enabled_color" "$enabled_text" "$NC"
@@ -55,7 +55,7 @@ show_service_status() {
 
 # list services
 list_services() {
-    echo -e "${BLUE}Daftar Service Node.js:${NC}"
+    echo -e "${GREEN}Daftar Service Node.js:${NC}"
     echo "==================================================================================================="
     printf "%-3s | %-30s | %-10s | %-10s\n" "NO" "SERVICE NAME" "STATUS" "AUTOSTART"
     echo "---------------------------------------------------------------------------------------------------"
@@ -89,7 +89,7 @@ list_services() {
             enabled_text="MANUAL"
         fi
         
-        printf "%-3s | %-30s | %s%-10s%s | %s%-10s%s\n" \
+        printf "%-3s | %-30s | %-10s%s | %-10s\n" \
             "$counter" "$service" \
             "$status_color" "$status_text" \
             "$enabled_color" "$enabled_text"
@@ -103,7 +103,7 @@ list_services() {
 show_service_detail() {
     local service_name=$(clean_string "$1")
     
-    echo -e "${BLUE}Detail Service: $service_name${NC}"
+    echo -e "${GREEN}Detail Service: $service_name${NC}"
     echo "============================================================"
     
     # Status dasar
@@ -138,27 +138,27 @@ manage_service() {
     
     case $action in
         "start")
-            echo -e "${BLUE}Memulai service $service_name...${NC}"
+            echo -e "${GREEN}Memulai service $service_name...${NC}"
             sudo systemctl start "$service_name"
             ;;
         "stop")
-            echo -e "${BLUE}Menghentikan service $service_name...${NC}"
+            echo -e "${RED}Menghentikan service $service_name...${NC}"
             sudo systemctl stop "$service_name"
             ;;
         "restart")
-            echo -e "${BLUE}Merestart service $service_name...${NC}"
+            echo -e "${YELLOW}Merestart service $service_name...${NC}"
             sudo systemctl restart "$service_name"
             ;;
         "enable")
-            echo -e "${BLUE}Mengaktifkan autostart untuk $service_name...${NC}"
+            echo -e "${GREEN}Mengaktifkan autostart untuk $service_name...${NC}"
             sudo systemctl enable "$service_name"
             ;;
         "disable")
-            echo -e "${BLUE}Menonaktifkan autostart untuk $service_name...${NC}"
+            echo -e "${RED}Menonaktifkan autostart untuk $service_name...${NC}"
             sudo systemctl disable "$service_name"
             ;;
         "reload")
-            echo -e "${BLUE}Mereload konfigurasi service $service_name...${NC}"
+            echo -e "${YELLOW}Mereload konfigurasi service $service_name...${NC}"
             sudo systemctl daemon-reload
             sudo systemctl reload-or-restart "$service_name"
             ;;
@@ -180,14 +180,14 @@ manage_service() {
 # Fungsi untuk menampilkan log realtime
 show_logs() {
     local service_name=$(clean_string "$1")
-    echo -e "${BLUE}Log realtime untuk $service_name (Ctrl+C untuk keluar):${NC}"
+    echo -e "${GREEN}Log realtime untuk $service_name (Ctrl+C untuk keluar):${NC}"
     echo "============================================================"
     journalctl -u "$service_name" -f
 }
 
 # Fungsi untuk membuat service baru
 create_service() {
-    echo -e "${BLUE}Membuat Service Baru${NC}"
+    echo -e "${GREEN}Membuat Service Baru${NC}"
     echo "============================================================"
     
     read -p "Nama service: " service_name
@@ -250,7 +250,7 @@ remove_service() {
 
 # Menu utama
 show_menu() {
-    echo -e "${BLUE}Pilih aksi:${NC}"
+    echo -e "${GREEN}Pilih aksi:${NC}"
     echo "1. Show service"
     echo "2. Manage service (start/stop/restart/enable/disable)"
     echo "3. Show detail service"
@@ -293,7 +293,7 @@ select_service() {
     fi
     
     # Tampilkan pilihan service ke stderr agar tidak tercampur dengan return value
-    echo -e "${BLUE}Pilih service:${NC}" >&2
+    echo -e "${GREEN}Pilih service:${NC}" >&2
     for i in "${!service_array[@]}"; do
         printf "%2d. %s\n" "$((i+1))" "${service_array[i]}" >&2
     done
@@ -327,13 +327,13 @@ main() {
                 list_services
                 ;;
             2)
-                echo -e "${BLUE}=== KELOLA SERVICE ===${NC}"
+                echo -e "${GREEN}=== KELOLA SERVICE ===${NC}"
                 selected_service=$(select_service)
                 selection_result=$?
                 if [[ $selection_result -eq 0 ]] && [[ -n "$selected_service" ]]; then
                     echo
-                    echo -e "${BLUE}Service yang dipilih: ${GREEN}$selected_service${NC}"
-                    echo -e "${BLUE}Pilih aksi:${NC}"
+                    echo -e "${GREEN}Service yang dipilih: ${GREEN}$selected_service${NC}"
+                    echo -e "${GREEN}Pilih aksi:${NC}"
                     echo "1. Start   2. Stop   3. Restart   4. Enable   5. Disable   6. Reload"
                     read -p "Pilih aksi (1-6): " action_choice
                     echo
