@@ -10,7 +10,7 @@ NC='\033[0;0m' # No Color
 # header
 show_header() {
     echo -e "${GREEN}=====================================================${NC}"
-    echo -e "${NC}      Node.js Service Manager By Datalogger@2025     ${NC}"
+    echo -e "${NC}      Node.js Service Manager V.1.0 By Datalogger@2025     ${NC}"
     echo -e "${GREEN}=====================================================${NC}"
     echo
 }
