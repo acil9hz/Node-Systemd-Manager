@@ -1,17 +1,44 @@
 #!/bin/bash
 
-# warna
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
-NC='\033[0;0m' # No Color
+# warna - Fixed for Debian 12
+RED='\e[0;31m'
+GREEN='\e[0;32m'
+YELLOW='\e[0;33m'
+BLUE='\e[0;34m'
+NC='\e[0m' # No Color
+
+# Fungsi untuk output berwarna yang lebih kompatibel
+print_color() {
+    local color=$1
+    local text=$2
+    # Cek apakah terminal mendukung warna
+    if [[ -t 1 ]] && { command -v tput >/dev/null 2>&1; } && { tput colors >/dev/null 2>&1; } && [[ $(tput colors) -ge 8 ]]; then
+        case $color in
+            "red") tput setaf 1; echo -n "$text"; tput sgr0 ;;
+            "green") tput setaf 2; echo -n "$text"; tput sgr0 ;;
+            "yellow") tput setaf 3; echo -n "$text"; tput sgr0 ;;
+            "blue") tput setaf 4; echo -n "$text"; tput sgr0 ;;
+            *) echo -n "$text" ;;
+        esac
+    else
+        # Fallback: gunakan ANSI escape codes
+        case $color in
+            "red") printf '\e[0;31m%s\e[0m' "$text" ;;
+            "green") printf '\e[0;32m%s\e[0m' "$text" ;;
+            "yellow") printf '\e[0;33m%s\e[0m' "$text" ;;
+            "blue") printf '\e[0;34m%s\e[0m' "$text" ;;
+            *) printf '%s' "$text" ;;
+        esac
+    fi
+}
 
 # header
 show_header() {
-    echo -e "${GREEN}=====================================================${NC}"
-    echo -e "${NC}      Node.js Service Manager V.1.2 By Datalogger@2025     ${NC}"
-    echo -e "${GREEN}=====================================================${NC}"
+    print_color "green" "====================================================="
+    echo
+    echo "      Node.js Service Manager V.1.1 By Datalogger@2025     "
+    print_color "green" "====================================================="
+    echo
     echo
 }
 
@@ -55,14 +82,16 @@ show_service_status() {
 
 # list services
 list_services() {
-    echo -e "${GREEN}Daftar Service Node.js:${NC}"
+    print_color "green" "Daftar Service Node.js:"
+    echo
     echo "==================================================================================================="
     printf "%-3s | %-30s | %-10s | %-10s\n" "NO" "SERVICE NAME" "STATUS" "AUTOSTART"
     echo "---------------------------------------------------------------------------------------------------"
     
     local services=$(get_node_services)
     if [[ -z "$services" ]]; then
-        echo -e "${YELLOW}Tidak ada service Node.js yang ditemukan${NC}"
+        print_color "yellow" "Tidak ada service Node.js yang ditemukan"
+        echo
         return
     fi
     
@@ -73,27 +102,41 @@ list_services() {
         local status=$(systemctl is-active "$service" 2>/dev/null)
         local enabled=$(systemctl is-enabled "$service" 2>/dev/null)
         
+        local status_text=""
+        local enabled_text=""
+        
         if [[ $status == "active" ]]; then
-            status_color=$GREEN
             status_text="RUNNING"
         else
-            status_color=$RED
             status_text="STOPPED"
         fi
         
         if [[ $enabled == "enabled" ]]; then
-            enabled_color=$GREEN
             enabled_text="AUTO"
         else
-            enabled_color=$YELLOW
             enabled_text="MANUAL"
         fi
         
-        printf "%-3s | %-30s | %-10s%s | %-10s\n" \
-            "$counter" "$service" \
-            "$status_color" "$status_text" \
-            "$enabled_color" "$enabled_text"
+        # Print basic info first
+        printf "%-3s | %-30s | " "$counter" "$service"
         
+        # Print colored status
+        if [[ $status == "active" ]]; then
+            print_color "green" "$status_text"
+        else
+            print_color "red" "$status_text"
+        fi
+        
+        printf " | "
+        
+        # Print colored autostart
+        if [[ $enabled == "enabled" ]]; then
+            print_color "green" "$enabled_text"
+        else
+            print_color "yellow" "$enabled_text"
+        fi
+        
+        echo
         ((counter++))
     done
     echo
@@ -129,50 +172,61 @@ manage_service() {
     
     # validasi input
     if [[ -z "$service_name" ]]; then
-        echo -e "${RED}Error: Nama service tidak valid${NC}"
+        print_color "red" "Error: Nama service tidak valid"
+        echo
         return 1
     fi
     
     # Debug: tampilkan nama service yang akan diproses
-    echo -e "${YELLOW}Debug: Processing service: '$service_name'${NC}"
+    print_color "yellow" "Debug: Processing service: '$service_name'"
+    echo
     
     case $action in
         "start")
-            echo -e "${GREEN}Memulai service $service_name...${NC}"
+            print_color "green" "Memulai service $service_name..."
+            echo
             sudo systemctl start "$service_name"
             ;;
         "stop")
-            echo -e "${RED}Menghentikan service $service_name...${NC}"
+            print_color "red" "Menghentikan service $service_name..."
+            echo
             sudo systemctl stop "$service_name"
             ;;
         "restart")
-            echo -e "${YELLOW}Merestart service $service_name...${NC}"
+            print_color "yellow" "Merestart service $service_name..."
+            echo
             sudo systemctl restart "$service_name"
             ;;
         "enable")
-            echo -e "${GREEN}Mengaktifkan autostart untuk $service_name...${NC}"
+            print_color "green" "Mengaktifkan autostart untuk $service_name..."
+            echo
             sudo systemctl enable "$service_name"
             ;;
         "disable")
-            echo -e "${RED}Menonaktifkan autostart untuk $service_name...${NC}"
+            print_color "red" "Menonaktifkan autostart untuk $service_name..."
+            echo
             sudo systemctl disable "$service_name"
             ;;
         "reload")
-            echo -e "${YELLOW}Mereload konfigurasi service $service_name...${NC}"
+            print_color "yellow" "Mereload konfigurasi service $service_name..."
+            echo
             sudo systemctl daemon-reload
             sudo systemctl reload-or-restart "$service_name"
             ;;
         *)
-            echo -e "${RED}Aksi tidak dikenal: $action${NC}"
+            print_color "red" "Aksi tidak dikenal: $action"
+            echo
             return 1
             ;;
     esac
     
     local result=$?
     if [[ $result -eq 0 ]]; then
-        echo -e "${GREEN}✓ Berhasil${NC}"
+        print_color "green" "? Berhasil"
+        echo
     else
-        echo -e "${RED}✗ Gagal (exit code: $result)${NC}"
+        print_color "red" "? Gagal (exit code: $result)"
+        echo
     fi
     echo
 }
@@ -269,7 +323,7 @@ EOF
     sudo cp /tmp/${service_name}.service /lib/systemd/system/
     sudo systemctl daemon-reload
     
-    echo -e "${GREEN}✓ Service $service_name berhasil dibuat${NC}"
+    echo -e "${GREEN}? Service $service_name berhasil dibuat${NC}"
     echo -e "${YELLOW}Untuk mengaktifkan: sudo systemctl enable $service_name${NC}"
     echo -e "${YELLOW}Untuk memulai: sudo systemctl start $service_name${NC}"
     echo
@@ -287,7 +341,7 @@ remove_service() {
         sudo systemctl disable "$service_name" 2>/dev/null
         sudo rm -f "/lib/systemd/system/$service_name"
         sudo systemctl daemon-reload
-        echo -e "${GREEN}✓ Service $service_name berhasil dihapus${NC}"
+        echo -e "${GREEN}? Service $service_name berhasil dihapus${NC}"
     else
         echo -e "${BLUE}Penghapusan dibatalkan${NC}"
     fi
@@ -296,7 +350,8 @@ remove_service() {
 
 # Menu utama
 show_menu() {
-    echo -e "${GREEN}Pilih aksi:${NC}"
+    print_color "green" "Pilih aksi:"
+    echo
     echo "1. Show service"
     echo "2. Manage service (start/stop/restart/enable/disable)"
     echo "3. Show detail service"
@@ -339,17 +394,21 @@ select_service() {
     fi
     
     # Tampilkan pilihan service ke stderr agar tidak tercampur dengan return value
-    echo -e "${GREEN}Pilih service:${NC}" >&2
+    print_color "green" "Pilih service:" >&2
     for i in "${!service_array[@]}"; do
         # Tampilkan juga status service untuk memudahkan pemilihan
         local status=$(systemctl is-active "${service_array[i]}" 2>/dev/null)
-        local status_indicator=""
+        local status_text=""
         if [[ $status == "active" ]]; then
-            status_indicator="[${GREEN}RUNNING${NC}]"
+            status_text="[RUNNING]"
+            printf "%2d. %-30s " "$((i+1))" "${service_array[i]}" >&2
+            print_color "green" "$status_text" >&2
         else
-            status_indicator="[${RED}STOPPED${NC}]"
+            status_text="[STOPPED]"
+            printf "%2d. %-30s " "$((i+1))" "${service_array[i]}" >&2
+            print_color "red" "$status_text" >&2
         fi
-        printf "%2d. %-30s %s\n" "$((i+1))" "${service_array[i]}" "$status_indicator" >&2
+        echo >&2
     done
     echo >&2
     
@@ -362,7 +421,7 @@ select_service() {
         echo "${service_array[$((choice-1))]}"
         return 0
     else
-        echo -e "${RED}Pilihan tidak valid. Masukkan nomor 1-$count${NC}" >&2
+        print_color "red" "Pilihan tidak valid. Masukkan nomor 1-$count" >&2
         return 1
     fi
 }
@@ -447,7 +506,7 @@ main() {
             8)
                 echo -e "${BLUE}Mereload semua service...${NC}"
                 sudo systemctl daemon-reload
-                echo -e "${GREEN}✓ Berhasil${NC}"
+                echo -e "${GREEN}? Berhasil${NC}"
                 echo
                 ;;
             9)
