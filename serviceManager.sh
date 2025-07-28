@@ -10,7 +10,7 @@ NC='\033[0;0m' # No Color
 # header
 show_header() {
     echo -e "${GREEN}=====================================================${NC}"
-    echo -e "${NC}      Node.js Service Manager V.1.0 By Datalogger@2025     ${NC}"
+    echo -e "${NC}      Node.js Service Manager V.1.2 By Datalogger@2025     ${NC}"
     echo -e "${GREEN}=====================================================${NC}"
     echo
 }
@@ -170,9 +170,9 @@ manage_service() {
     
     local result=$?
     if [[ $result -eq 0 ]]; then
-        echo -e "${GREEN}? Berhasil${NC}"
+        echo -e "${GREEN}✓ Berhasil${NC}"
     else
-        echo -e "${RED}? Gagal (exit code: $result)${NC}"
+        echo -e "${RED}✗ Gagal (exit code: $result)${NC}"
     fi
     echo
 }
@@ -185,6 +185,54 @@ show_logs() {
     journalctl -u "$service_name" -f
 }
 
+# Fungsi untuk menampilkan log dengan filter waktu
+show_logs_since() {
+    local service_name=$(clean_string "$1")
+    
+    echo -e "${GREEN}Pilihan waktu untuk log $service_name:${NC}"
+    echo "1. 1 jam terakhir"
+    echo "2. 3 jam terakhir" 
+    echo "3. 6 jam terakhir"
+    echo "4. 12 jam terakhir"
+    echo "5. 24 jam terakhir (1 hari)"
+    echo "6. 3 hari terakhir"
+    echo "7. 7 hari terakhir (1 minggu)"
+    echo "8. Custom (format: YYYY-MM-DD HH:MM:SS atau today, yesterday)"
+    echo
+    
+    read -p "Pilih opsi (1-8): " time_choice
+    echo
+    
+    local since_param=""
+    case $time_choice in
+        1) since_param="1 hour ago" ;;
+        2) since_param="3 hours ago" ;;
+        3) since_param="6 hours ago" ;;
+        4) since_param="12 hours ago" ;;
+        5) since_param="1 day ago" ;;
+        6) since_param="3 days ago" ;;
+        7) since_param="1 week ago" ;;
+        8) 
+            read -p "Masukkan waktu custom (contoh: '2025-01-01 10:00:00' atau 'today' atau 'yesterday'): " custom_time
+            since_param="$custom_time"
+            ;;
+        *)
+            echo -e "${RED}Pilihan tidak valid${NC}"
+            return 1
+            ;;
+    esac
+    
+    echo -e "${GREEN}Log untuk $service_name sejak: $since_param${NC}"
+    echo "============================================================"
+    
+    # Tampilkan log dengan parameter --since
+    journalctl -u "$service_name" --since "$since_param" --no-pager
+    
+    echo
+    echo -e "${BLUE}--- End of logs ---${NC}"
+    echo
+}
+
 # Fungsi untuk membuat service baru
 create_service() {
     echo -e "${GREEN}Membuat Service Baru${NC}"
@@ -192,8 +240,6 @@ create_service() {
     
     read -p "Nama service: " service_name
     read -p "Path ke aplikasi Node.js: " app_path
-#    read -p "Working directory: " work_dir
-#    read -p "User untuk menjalankan service: " service_user
     read -p "Deskripsi service: " description 
     
     # Validasi input
@@ -223,7 +269,7 @@ EOF
     sudo cp /tmp/${service_name}.service /lib/systemd/system/
     sudo systemctl daemon-reload
     
-    echo -e "${GREEN}? Service $service_name berhasil dibuat${NC}"
+    echo -e "${GREEN}✓ Service $service_name berhasil dibuat${NC}"
     echo -e "${YELLOW}Untuk mengaktifkan: sudo systemctl enable $service_name${NC}"
     echo -e "${YELLOW}Untuk memulai: sudo systemctl start $service_name${NC}"
     echo
@@ -241,7 +287,7 @@ remove_service() {
         sudo systemctl disable "$service_name" 2>/dev/null
         sudo rm -f "/lib/systemd/system/$service_name"
         sudo systemctl daemon-reload
-        echo -e "${GREEN}? Service $service_name berhasil dihapus${NC}"
+        echo -e "${GREEN}✓ Service $service_name berhasil dihapus${NC}"
     else
         echo -e "${BLUE}Penghapusan dibatalkan${NC}"
     fi
@@ -255,19 +301,18 @@ show_menu() {
     echo "2. Manage service (start/stop/restart/enable/disable)"
     echo "3. Show detail service"
     echo "4. Show log realtime"
-    echo "5. Create new service"
-    echo "6. Delete service"
-    echo "7. Reload all service"
-    echo "8. Exit"
+    echo "5. Show log dengan filter waktu"
+    echo "6. Create new service"
+    echo "7. Delete service"
+    echo "8. Reload all service"
+    echo "9. Exit"
     echo
 }
 
-# select service
+# select service - OPTIMIZED VERSION
 select_service() {
-    # Dapatkan daftar service yang bersih
-    local services_raw
-    services_raw=$(systemctl list-unit-files --type=service --no-pager --plain --no-legend | 
-     -E "parsing" | grep -v "@" | awk '{print $1}' | sort)
+    # Gunakan fungsi get_node_services yang sudah ada
+    local services_raw=$(get_node_services)
     
     if [[ -z "$services_raw" ]]; then
         echo -e "${RED}Tidak ada service yang ditemukan${NC}" >&2
@@ -296,7 +341,15 @@ select_service() {
     # Tampilkan pilihan service ke stderr agar tidak tercampur dengan return value
     echo -e "${GREEN}Pilih service:${NC}" >&2
     for i in "${!service_array[@]}"; do
-        printf "%2d. %s\n" "$((i+1))" "${service_array[i]}" >&2
+        # Tampilkan juga status service untuk memudahkan pemilihan
+        local status=$(systemctl is-active "${service_array[i]}" 2>/dev/null)
+        local status_indicator=""
+        if [[ $status == "active" ]]; then
+            status_indicator="[${GREEN}RUNNING${NC}]"
+        else
+            status_indicator="[${RED}STOPPED${NC}]"
+        fi
+        printf "%2d. %-30s %s\n" "$((i+1))" "${service_array[i]}" "$status_indicator" >&2
     done
     echo >&2
     
@@ -371,9 +424,18 @@ main() {
                 fi
                 ;;
             5)
-                create_service
+                selected_service=$(select_service)
+                selection_result=$?
+                if [[ $selection_result -eq 0 ]] && [[ -n "$selected_service" ]]; then
+                    show_logs_since "$selected_service"
+                else
+                    echo -e "${RED}Service tidak dipilih atau tidak valid${NC}"
+                fi
                 ;;
             6)
+                create_service
+                ;;
+            7)
                 selected_service=$(select_service)
                 selection_result=$?
                 if [[ $selection_result -eq 0 ]] && [[ -n "$selected_service" ]]; then
@@ -382,13 +444,13 @@ main() {
                     echo -e "${RED}Service tidak dipilih atau tidak valid${NC}"
                 fi
                 ;;
-            7)
+            8)
                 echo -e "${BLUE}Mereload semua service...${NC}"
                 sudo systemctl daemon-reload
-                echo -e "${GREEN}? Berhasil${NC}"
+                echo -e "${GREEN}✓ Berhasil${NC}"
                 echo
                 ;;
-            8)
+            9)
                 echo -e "${BLUE}Terima kasih telah menggunakan Node.js Service Manager!${NC}"
                 exit 0
                 ;;
