@@ -266,7 +266,8 @@ show_menu() {
 select_service() {
     # Dapatkan daftar service yang bersih
     local services_raw
-    services_raw=$(systemctl list-unit-files --type=service --no-pager --plain --no-legend | grep -E "parsing" | grep -v "@" | awk '{print $1}' | sort)
+    services_raw=$(systemctl list-unit-files --type=service --no-pager --plain --no-legend | 
+     -E "parsing" | grep -v "@" | awk '{print $1}' | sort)
     
     if [[ -z "$services_raw" ]]; then
         echo -e "${RED}Tidak ada service yang ditemukan${NC}" >&2
