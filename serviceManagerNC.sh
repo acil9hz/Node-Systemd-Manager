@@ -286,13 +286,13 @@ remove_service() {
 # Menu utama
 show_menu() {
     echo "Pilih aksi:"
-    echo "1. Show service"
+    echo "1. List systemd service"
     echo "2. Manage service (start/stop/restart/enable/disable)"
-    echo "3. Show detail service"
-    echo "4. Show log realtime"
-    echo "5. Show log dengan filter waktu"
-    echo "6. Create new service"
-    echo "7. Delete service"
+    echo "3. Show status systemd service"
+    echo "4. Show log systemd realtime"
+    echo "5. Show log journalctl"
+    echo "6. Create new systemd service"
+    echo "7. Delete systemd service"
     echo "8. Reload all service"
     echo "9. Exit"
     echo
