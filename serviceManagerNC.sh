@@ -3,7 +3,7 @@
 # header
 show_header() {
     echo "====================================================="
-    echo "      Node.js Service Manager V.1.1 By Datalogger@2025     "
+    echo "      Node.js Service Manager V.1.2 By Datalogger@2025     "
     echo "====================================================="
     echo
 }
